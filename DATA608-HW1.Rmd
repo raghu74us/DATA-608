@@ -1,0 +1,164 @@
+---
+title: "DATA608-HW1"
+author: "Raghu"
+date: "February 2, 2018"
+output: 
+  html_document: 
+    code_folding: hide
+    fig_caption: yes
+    fig_height: 7
+    fig_width: 10
+    highlight: textmate
+    theme: cerulean
+    toc: yes
+    toc_float: yes
+---
+
+```{r setup, include=FALSE, warning=FALSE, message=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+#library(memisc, warn.conflicts = FALSE, quietly=TRUE)
+
+```
+
+## R Markdown
+
+**Principles of Data Visualization and Introduction to ggplot2**
+
+I have provided you with data about the 5,000 fastest growing companies in the US, as compiled by Inc. magazine. lets read this in:
+
+```{r a}
+
+libr <- c("stringr","knitr","dplyr","ggplot2","reshape","DT","tidyr")
+lapply (libr,require,character.only=TRUE)
+
+inc <- read.csv("https://raw.githubusercontent.com/charleyferrari/CUNY_DATA_608/master/module1/Data/inc5000_data.csv", header= TRUE)
+
+```
+
+And lets preview this data:
+
+```{r a1}
+
+head(inc)
+
+```
+
+
+```{r a2}
+
+summary(inc)
+
+```
+
+Think a bit on what these summaries mean. Use the space below to add some more relevant non-visual exploratory information you think helps you understand this data:
+
+This dataset has Rank, Name of company, Growth_Rate, Revenue , Industry type, count of Employees, City and State.
+There are 5000 records in the data set with 25 Industry type and 52 states(DC, PR are Some new State code.)
+
+```{r}
+
+# Insert your code here, create more chunks as necessary
+# Statewise count of Industries
+df1 <- data.frame(inc)
+df1["Count"] <-1
+df2 <- aggregate(df1[c("Count")], by=list(Industry=df1$Industry,State=df1$State ), FUN=sum, na.rm=TRUE,order(1))
+df2 <- df2[order(df2[1],decreasing=FALSE),]
+
+# Statewise count of Industries
+datatable(df2, options = list( pageLength = 5, lengthMenu = c(5, 10, 40),   initComplete = JS(
+    "function(settings, json) {",
+    "$(this.api().table().header()).css({'background-color': '#01975b', 'color': '#fff'});",
+    "}")), rownames=TRUE)
+
+# Industry wise count in each State
+df3 <- data.frame(inc)
+df3["Count"] <-1
+df4 <- aggregate(df3[c("Count")], by=list(State=df3$State, Industry=df3$Industry), FUN=sum, na.rm=TRUE,ordered=TRUE)
+df4 <- df4[order(df4[1],decreasing=FALSE),]
+
+# Industry wise count in each State
+datatable(df4, options = list( pageLength = 5, lengthMenu = c(5, 10, 40),   initComplete = JS(
+    "function(settings, json) {",
+    "$(this.api().table().header()).css({'background-color': '#01975b', 'color': '#fff'});",
+    "}")), rownames=TRUE)
+
+
+```
+
+## Question 1
+
+Create a graph that shows the distribution of companies in the dataset by State (ie how many are in each state). There are a lot of States, so consider which axis you should use. This visualization is ultimately going to be consumed on a 'portrait' oriented screen (ie taller than wide), which should further guide your layout choices.
+
+```{r a5}
+
+# Answer Question 1 here
+# Statewise count of Industries
+
+ggplot(df2, aes(x = State, y = Count, color = Industry)) +
+  geom_point() +
+  coord_flip() + ggtitle("State wise Count of Industries")
+
+
+# Industry wise count in each State
+ggplot(df4, aes(x = Industry, y = Count, color = State)) +
+  geom_point() +
+  coord_flip() + ggtitle("Industry wise Count in Each State")
+
+```
+
+## Quesiton 2
+
+Lets dig in on the state with the 3rd most companies in the data set. Imagine you work for the state and are interested in how many people are employed by companies in different industries. Create a plot that shows the average and/or median employment by industry for companies in this state (only use cases with full data, use R's `complete.cases()` function.) In addition to this, your graph should show how variable the ranges are, and you should deal with outliers.
+
+```{r}
+
+# Answer Question 2 here
+
+# State with most companies
+dfsc <- data.frame(inc)
+dfsc["Count"] <-1
+dfsc1 <- aggregate(dfsc[c("Count")], by=list(State=dfsc$State ), FUN=sum, na.rm=TRUE)
+dfsc1 <- dfsc1[order(dfsc1[2],decreasing=TRUE),]
+
+# State count
+head(dfsc1 ,5)
+
+NYd<-data.frame(subset(dfsc, State =="NY"))
+NYd <- NYd[complete.cases(NYd), ] 
+
+NYd1 <- NYd %>%
+  group_by(State,Industry) %>%
+  summarise_each( funs( mean, median, sd) , Employees)
+
+datatable(NYd1, options = list( pageLength = 5, lengthMenu = c(5, 10, 40),   initComplete = JS(
+    "function(settings, json) {",
+    "$(this.api().table().header()).css({'background-color': '#01975b', 'color': '#fff'});",
+    "}")), rownames=TRUE)
+
+# Plot Mean, Median for Industries in NY.
+
+ggplot(NYd, aes(x = Industry, y = Employees)) + geom_boxplot() + coord_flip() 
+
+
+```
+
+
+    New york is the state with 3rd most companies. "Business Produts & Services", "Human Resources" and "Travel & Hospitality" Industry offers the high Employment. There are outliers too.
+
+
+## Question 3
+
+Now imagine you work for an investor and want to see which industries generate the most revenue per employee. Create a chart that makes this information clear. Once again, the distribution per industry should be shown.
+
+```{r}
+
+# Answer Question 3 here
+
+Invd<-data.frame(subset(inc, State =="NY"))
+
+ggplot(Invd, aes(x = Industry, y = Revenue/Employees)) +   geom_point()  + coord_flip() + ggtitle("Distribution per Industry")
+
+```
+
+    Telecom, Retail, Human Resources, Consumer Products & Services, Business Products & services and Advertising & Marketing industries generate most revenue per employee. 

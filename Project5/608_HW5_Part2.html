@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Assignment5</title>
+
+        <!-- Latest compiled and minified CSS -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+
+        <!-- Optional theme -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
+
+        <!--link rel="stylesheet" href="https://cdn.rawgit.com/novus/nvd3/v1.7.1/build/nv.d3.css" -->
+
+        <script type="text/javascript" src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+        <script type="text/javascript" src="https://cdn.rawgit.com/novus/nvd3/v1.7.1/build/nv.d3.min.js"></script>
+
+        <style>
+            #datatable {
+                margin-top: 25px;
+            }
+            #searchForm {
+                margin-top:25px;
+            }
+            #presidentSearch {
+                width: 250px;
+            }
+            .xaxislabel {
+              font-size: 9px;
+            }
+
+        </style>
+    </head>
+
+    <body onload="loadPresidentsCsv()">
+        <div class="container">
+            <div class="row">
+                <div class="col-xs-offset-1 col-xs-3">
+                    <h5>CUNY DATA 608 - Assignment5 <br />
+                    Raghu</h5>
+                </div>
+            </div> 
+            <div class="row">
+                <div class="col-xs-offset-1 col-xs-10">
+					Write a function to load the presidents data and display the data as an html table 
+					(you may use a cdv parser from any available library, though I encourage you to try the d3 one).   
+					Now that you have the presidents data loaded, write a function that will return that president’s 
+					height & weight when you type it in. This can be typed into either an input box or an alert box, 
+					and then print the result in a box or on the webpage. 
+                </div>
+            </div>
+            <div class="row">
+                <form class="form-inline" id="searchForm">                
+                        <div class="col-xs-offset-3 col-xs-5">
+                            <div class="form-group">
+                                <label for="presidentSearch">Search</label>
+                                <input type="search" class="form-control" id="presidentSearch" placeholder="Enter President">
+                            </div>
+                        </div>                 
+                </form>                    
+            </div>
+            <div class="row">
+                <div class="col-xs-offset-1 col-xs-10">
+                    <div id="datatable"></div>
+                </div>
+            </div>
+        </div>
+
+        <script type="text/javascript">
+            var _rows = []
+            var _tableHeight = 0
+            var _names;
+
+
+            // Function: loadPresidentsCsv
+            function loadPresidentsCsv() {
+                d3.csv("data.csv",
+                    function (error, csv) {
+                        csv.forEach(function (row) {
+                            _rows.push(row);
+                        })
+
+                        var table = d3.select("#datatable").append("table");
+                        table.classed("table table-striped", true);
+                        thead = table.append("thead");
+                        tbody = table.append("tbody");
+
+                        thead.append("th").text("Name");
+                        thead.append("th").text("Height");
+                        thead.append("th").text("Weight");
+
+                        var tr = tbody.selectAll("tr")
+                              .data(_rows)
+                              .enter().append("tr");
+
+                        var td = tr.selectAll("td")
+                              .data(function (d) { return [d.Name, d.Height, d.Weight]; })
+                            .enter().append("td")
+                              .text(function (d) { return d; });
+                    });
+
+                d3.select("#presidentSearch").on("keyup", searchPresidents);                
+            }
+
+            //
+            // Function: searchPresidents
+            //
+            // Description: Performs the search/filtering from the input field.
+            // 
+            function searchPresidents() {
+                var inputField = d3.select("#presidentSearch");
+                var srchText = inputField.property("value");
+                var tableRows = d3.select("#datatable").select("tbody").selectAll("tr");
+
+                // Filter the table rows based on president's name
+                tableRows[0].forEach(function (row) {
+                    var td = row.cells[0]
+                    if (td.innerText.search(srchText) > -1) {
+                        // Found
+                        d3.select(row).classed("hidden", false)
+                    }
+                    else {
+                        d3.select(row).classed("hidden", true)
+                    }
+                });
+             }
+
+        </script>
+    </body>
+</html>
